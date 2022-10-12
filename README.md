@@ -7,6 +7,13 @@ cd `${package}`
 cargo contract build --release
 ```
 
+## Fetch a contract template
+
+```shell
+cargo install contemplate
+cargo contemplate phat-contract new-package
+```
+
 ## Scripts
 
 Setup gatekeeper and cluster(once and for all):
