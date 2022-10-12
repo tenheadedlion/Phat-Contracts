@@ -1,4 +1,4 @@
-# Phat Contracts Collections
+# Phat Contract Collections
 
 ## Build Contracts
 
