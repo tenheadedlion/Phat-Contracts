@@ -16,13 +16,13 @@ mod incrementer {
 
     impl Incrementer {
         #[ink(constructor)]
-        pub fn new(init_value: i32) -> Self {
-            Self { value: init_value }
+        pub fn new() -> Self {
+            Self { value: 42 }
         }
 
         #[ink(constructor)]
         pub fn default() -> Self {
-            Self::new(Default::default())
+            Self::new()
         }
 
         #[ink(message)]

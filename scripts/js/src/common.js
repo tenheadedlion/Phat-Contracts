@@ -15,7 +15,7 @@ function loadContractFile(contractFile, label) {
 }
 
 async function deployContract(api, txqueue, keyPair, contract, clusterId) {
-  console.log(`Contracts: uploading ${contract.name}`);
+  console.log(`Contracts: uploading ${contract.name} to cluster ${clusterId}`);
   // upload the contract
   const { events: deployEvents } = await txqueue.submit(
     api.tx.utility.batchAll([
@@ -33,7 +33,6 @@ async function deployContract(api, txqueue, keyPair, contract, clusterId) {
     ]),
     keyPair
   );
-  console.log(deployEvents);
   const contractIds = deployEvents
     .filter(
       (ev) =>

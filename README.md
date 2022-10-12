@@ -1,6 +1,13 @@
 # Phat Contracts Collections
 
-## Deployment
+## Build Contracts
+
+```shell
+cd `${package}`
+cargo contract build --release
+```
+
+## Scripts
 
 Setup gatekeeper and cluster(once and for all):
 
