@@ -10,6 +10,7 @@ mod incrementer {
 
 
     #[ink(storage)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct Incrementer {
         value: i32,
     }
@@ -20,11 +21,6 @@ mod incrementer {
             Self { value: 42 }
         }
 
-        #[ink(constructor)]
-        pub fn default() -> Self {
-            Self::new()
-        }
-
         #[ink(message)]
         pub fn inc(&mut self, by: i32) {
             self.value += by;
@@ -33,27 +29,6 @@ mod incrementer {
         #[ink(message)]
         pub fn get(&self) -> i32 {
             self.value
-        }
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[ink::test]
-        fn default_works() {
-            let contract = Incrementer::default();
-            assert_eq!(contract.get(), 0);
-        }
-
-        #[ink::test]
-        fn it_works() {
-            let mut contract = Incrementer::new(42);
-            assert_eq!(contract.get(), 42);
-            contract.inc(5);
-            assert_eq!(contract.get(), 47);
-            contract.inc(-50);
-            assert_eq!(contract.get(), -3);
         }
     }
 }

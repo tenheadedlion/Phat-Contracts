@@ -7,53 +7,50 @@ const config = require("./config.json");
 const keyringJson = require("./keyring.json");
 
 async function main() {
-
   const args = process.argv.slice(2);
-  const package = args[0];
+  const pkg = args[0];
 
   console.log("Current directory:", process.cwd());
-  console.log("package: " + package);
+  console.log("package: " + pkg);
 
-  const raw = fs.readFileSync(`./target/contract_jsons/${package}.contract`);
-  const contract = JSON.parse(raw);
+  const raw = fs.readFileSync(`./target/contract_jsons/${pkg}.contract`);
+  const contractData = JSON.parse(raw);
 
   const wsProvider = new WsProvider(config.provider);
   const api = await ApiPromise.create({
     provider: wsProvider,
+    types: {
+      ...Phala.khalaDev,
+      ...Phala.types
+    },
   });
 
   const newApi = await api.clone().isReady;
-  const foo = new ContractPromise(
+  const contract = new ContractPromise(
     await Phala.create({
       api: newApi,
       baseURL: config.pruntimeURL,
-      contractId: contract.address,
+      contractId: contractData.address,
     }),
-    contract.metadata,
-    contract.address
+    contractData.metadata,
+    contractData.address
   );
+  const keyring = new Keyring({ type: "sr25519" });
+  const alice = keyring.addFromJson(keyringJson);
+  alice.unlock();
+  
+  const certificateData = await Phala.signCertificate({
+    api,
+    pair: alice,
+  });
 
-  console.log(foo.query);
-
-  //console.log(foo.query.totalSupply);
-  const supply = await foo.query.totalSupply({});
-
-  // maximum gas to be consumed for the call. if limit is too small the call will fail.
-  const gasLimit = 3000n * 1000000n;
-  // a limit to how much Balance to be used to pay for the storage created by the contract call
-  // if null is passed, unlimited balance can be used
-  const storageDepositLimit = null;
-
-  const { gasRequired, storageDeposit, result, output } =
-    await foo.query.totalSupply({
-      gasLimit,
-      storageDepositLimit,
-    });
-
-  console.log(gasRequired);
-  console.log(storageDeposit);
-  console.log(result);
+  const {output} = await contract.query.get(certificateData, {})
   console.log(output);
+  await api.disconnect()
+  //  return res.status(200).json(output?.toJSON())
+
+
+
 }
 
 main()
