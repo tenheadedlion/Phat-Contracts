@@ -3,13 +3,21 @@ const fs = require("fs");
 const { ApiPromise, WsProvider, Keyring } = require("@polkadot/api");
 const Phala = require("@phala/sdk");
 const { TxQueue, checkUntil, hex } = require("./utils");
+const config = require("./config.json");
+const keyringJson = require("./keyring.json");
 
 async function main() {
-  const raw = fs.readFileSync("./res/.contract");
-  const contract = JSON.parse(raw);
-  console.log(contract.pruntimeURL);
 
-  const wsProvider = new WsProvider(contract.provider);
+  const args = process.argv.slice(2);
+  const package = args[0];
+
+  console.log("Current directory:", process.cwd());
+  console.log("package: " + package);
+
+  const raw = fs.readFileSync(`./target/contract_jsons/${package}.contract`);
+  const contract = JSON.parse(raw);
+
+  const wsProvider = new WsProvider(config.provider);
   const api = await ApiPromise.create({
     provider: wsProvider,
   });
@@ -18,7 +26,7 @@ async function main() {
   const foo = new ContractPromise(
     await Phala.create({
       api: newApi,
-      baseURL: contract.pruntimeURL,
+      baseURL: config.pruntimeURL,
       contractId: contract.address,
     }),
     contract.metadata,

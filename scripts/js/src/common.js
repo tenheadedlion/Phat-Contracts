@@ -4,8 +4,8 @@ const Phala = require("@phala/sdk");
 const { checkUntil, checkUntilEq, hex } = require("./utils");
 
 function loadContractFile(contractFile, label) {
+  console.log("Loading contract file: " + contractFile);
   const metadata = JSON.parse(fs.readFileSync(contractFile));
-  console.log(metadata.V3.spec.constructors);
   const constructor = metadata.V3.spec.constructors.find(
     (c) => c.label === label
   ).selector;
@@ -14,36 +14,11 @@ function loadContractFile(contractFile, label) {
   return { wasm, metadata, constructor, name };
 }
 
-function loadContractDir(path) {
-  const metadataPath = `${path}/target/ink/metadata.json`;
-  const metadata = JSON.parse(fs.readFileSync(metadataPath));
-  const name = metadata.contract.name;
-  const wasmPath = `${path}/target/ink/${name}.wasm`;
-  const sideprogPath = `${path}/sideprog.wasm`;
-  const wasm = hex(fs.readFileSync(wasmPath, "hex"));
-  const constructor = metadata.V3.spec.constructors.find(
-    (c) => c.label == "default"
-  ).selector;
-  const sideprog = fs.existsSync(sideprogPath)
-    ? hex(fs.readFileSync(sideprogPath, "hex"))
-    : null;
-  return { wasm, metadata, constructor, sideprog, name };
-}
-
-async function deployContract(api, txqueue, pair, contract, clusterId) {
+async function deployContract(api, txqueue, keyPair, contract, clusterId) {
   console.log(`Contracts: uploading ${contract.name}`);
   // upload the contract
-  if (contract.name === "log_server") {
-    console.log("contract.sideprog");
-    console.log(contract.sideprog);
-  }
   const { events: deployEvents } = await txqueue.submit(
     api.tx.utility.batchAll([
-      api.tx.phalaFatContracts.clusterUploadResource(
-        clusterId,
-        "SidevmCode",
-        contract.sideprog
-      ),
       api.tx.phalaFatContracts.clusterUploadResource(
         clusterId,
         "InkCode",
@@ -56,8 +31,9 @@ async function deployContract(api, txqueue, pair, contract, clusterId) {
         clusterId
       ),
     ]),
-    pair
+    keyPair
   );
+  console.log(deployEvents);
   const contractIds = deployEvents
     .filter(
       (ev) =>
@@ -138,7 +114,6 @@ async function uploadSystemCode(api, txqueue, pair, wasm) {
 
 module.exports = {
   loadContractFile,
-  loadContractDir,
   deployContract,
   setLogHanlder,
   uploadSystemCode,

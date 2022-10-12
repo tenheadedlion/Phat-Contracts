@@ -2,6 +2,7 @@ const { ApiPromise, WsProvider, Keyring } = require("@polkadot/api");
 const { ContractPromise } = require("@polkadot/api-contract");
 const Phala = require("@phala/sdk");
 const fs = require("fs");
+const config = require("./config.json");
 
 const { TxQueue, checkUntil, hex } = require("./utils");
 const {
@@ -92,12 +93,14 @@ async function deployCluster(
 }
 
 async function main() {
+  console.log("Current directory:", process.cwd());
+
   const contractSystem = loadContractFile(
-    "res/pink_system.contract",
+    "./scripts/js/src/res/pink_system.contract",
     "default"
   );
 
-  const provider = "ws://localhost:19944";
+  const provider = config.provider;
   // connect to the chain
   const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({
@@ -116,7 +119,7 @@ async function main() {
   console.log(alice);
 
   // connect to pruntime
-  const pruntimeURL = "http://localhost:18000";
+  const pruntimeURL = config.pruntimeURL;
   const prpc = Phala.createPruntimeApi(pruntimeURL);
   const worker = await getWorkerPubkey(api);
   const connectedWorker = hex((await prpc.getInfo({})).publicKey);
@@ -137,25 +140,22 @@ async function main() {
     worker
   );
 
-  console.log("systemContract: " + systemContract);
-
-  // if (!fs.existsSync("./res/.contract")) {
-  const contract = loadContractFile(
-    "../../../target/ink/agency.contract",
-    "new"
-  );
-  await deployContract(api, txqueue, alice, contract, clusterId);
-  const dumper = {
-    alice: alice,
-    provider: provider,
-    pruntimeURL: pruntimeURL,
-    metadata: contract.metadata,
-    address: contract.address,
+  const jsonDump = {
+    provider: config.provider,
+    pruntimeURL: config.pruntimeURL,
+    clusterId: clusterId,
   };
 
-  const json = JSON.stringify(dumper);
-  fs.writeFileSync("./res/.contract", json);
+  fs.writeFileSync(
+    `./scripts/js/src/keyring.json`,
+    JSON.stringify(alice.toJson())
+  );
+  fs.writeFileSync(`./scripts/js/src/config.json`, JSON.stringify(jsonDump));
 
+  const dir = "./target/contract_jsons/";
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
 }
 
 main()
