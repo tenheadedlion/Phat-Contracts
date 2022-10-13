@@ -3,6 +3,7 @@
 use ink_lang as ink;
 use ink_prelude::vec::Vec;
 use scale::{Decode, Encode};
+use ink_env::AccountId;
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -20,6 +21,13 @@ pub trait Signer {
     fn sign_transaction(&self, unsigned_tx: Vec<u8>) -> SignedTransaction;
 }
 
+pub fn greet() {
+
+}
+
+
+
+/*
 #[ink::contract]
 mod stub {
     use super::*;
@@ -41,3 +49,5 @@ mod stub {
         }
     }
 }
+
+*/

@@ -1,5 +1,5 @@
 [package]
-name = "erc20"
+name = "signer"
 version = "0.1.2"
 authors = ["anonymous"]
 edition = "2021"
@@ -14,20 +14,16 @@ ink_lang = { version = "3", default-features = false }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
-hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 
-pink-extension = { version = "0.1.17", default-features = false }
+pink-extension = { path = "/home/root_/Workspace4/phala-blockchain/crates/pink/pink-extension", version = "0.1.17", default-features = false }
 pink-utils = { version = "0.1", default-features = false }
-aes-gcm = { version = "0.9.4" }
-#rsa = { version = "0.6.1", default-features = true }
-#rand = "0.8"
-base64 = { version = "0.13.0", default-features = false, features =["alloc"] }
+index-traits = { path = "../crates/index-traits", default-features = false }
 
 [dev-dependencies]
 pink-extension-runtime = "0.1.3"
 
 [lib]
-name = "erc20"
+name = "singer"
 path = "src/lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
@@ -44,5 +40,6 @@ std = [
     "scale/std",
     "scale-info/std",
     "pink-extension/std",
+    "index-traits/std"
 ]
 ink-as-dependency = []
