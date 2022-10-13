@@ -4,4 +4,5 @@ resolver = "2"
 members = [
     "erc20",
     "incrementer",
+    "index-traits"
 ]
