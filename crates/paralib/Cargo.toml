@@ -1,0 +1,8 @@
+[package]
+name = "paralib"
+version = "0.1.2"
+authors = ["anonymous"]
+edition = "2021"
+
+[dependencies]
+ink_prelude = { version = "3", default-features = false }

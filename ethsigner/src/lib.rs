@@ -8,7 +8,6 @@ mod ethsigner {
     use super::*;
     use index_traits::SignedTransaction;
     use index_traits::Signer as SignerTrait;
-    use index_traits::ToArray;
     use ink_prelude::vec::Vec;
     use ink_primitives::Key;
     use ink_prelude::string::String;
