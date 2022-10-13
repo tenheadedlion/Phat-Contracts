@@ -4,7 +4,8 @@ resolver = "2"
 members = [
     "erc20",
     "incrementer",
-    "signer",
+    "subsigner",
+    "ethsigner"
 ]
 
 exclude = [
