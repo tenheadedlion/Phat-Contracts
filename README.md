@@ -25,7 +25,7 @@ cargo contemplate phat-contract ${new_package}
 
 ## Scripts
 
-To begin with, edit the [configuration file](./scripts/js/src/config.json) to suit your needs
+To begin with, edit the [configuration file](./scripts/sub/src/config.json) to suit your needs
 
 ```shell
 {
@@ -37,17 +37,17 @@ To begin with, edit the [configuration file](./scripts/js/src/config.json) to su
 Setup the gatekeeper and the default cluster(once and for all):
 
 ```shell
-node scripts/js/src/e2e.js
+node scripts/sub/srce2e.js
 ```
 
 Deploy a specific contract
 
 ```shell
-node scripts/js/src/deploy.js erc20
+node scripts/sub/src/deploy.js erc20
 ```
 
 Interact with the contract:
 
 ```shell
-node script/js/src/run.js erc20
+node script/sub/src/run.js erc20
 ```
