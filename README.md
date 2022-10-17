@@ -51,3 +51,12 @@ Interact with the contract:
 ```shell
 node script/sub/src/run.js erc20
 ```
+
+## Interact with Ethereum Contracts
+
+Follow [this instruction](https://docs.alchemy.com/docs/hello-world-smart-contract) to build your contracts and interact with them like this:
+
+```shell
+cd eth
+npx hardhat run scripts/interact-with-helloworld.ts
+```
