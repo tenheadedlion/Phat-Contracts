@@ -15,6 +15,7 @@ mod ethsigner {
     use paralib::ToArray;
     use pink::chain_extension::signing;
     use pink::PinkEnvironment;
+    use pink_web3::ethabi::FunctionOutputDecoder;
     use pink_web3::types::U256;
     use rlp::Rlp;
     use rlp::RlpStream;
@@ -98,7 +99,7 @@ mod ethsigner {
             let txn_type = unsigned_tx[0];
             let adjust_v_value = matches!(txn_type, LEGACY_TX_ID);
 
-            let txn = &&unsigned_tx[1..];
+            let txn = &unsigned_tx[1..];
             let rlp = Rlp::new(txn);
             let chain_id = rlp.at(0).unwrap().as_val::<u64>().unwrap();
 
@@ -113,12 +114,24 @@ mod ethsigner {
             };
 
             let mut stream = RlpStream::new();
-            let raw = rlp.as_raw();
-            stream.append_raw_checked(raw, rlp.item_count().unwrap(), raw.len() + 8 + 32 + 32);
+
+            stream.begin_list(rlp.item_count().unwrap() + 3);
+            let raw = rlp.data().unwrap();
+            stream.append_raw(raw, rlp.item_count().unwrap());
             stream.append(&signature.v);
             stream.append(&U256::from_big_endian(signature.r.as_bytes()));
             stream.append(&U256::from_big_endian(signature.s.as_bytes()));
-            SignedTransaction::EthSignedTX(stream.as_raw().to_vec())
+
+            let output = if txn_type == 0 {
+                // legacy and eip155 transaction
+                [rlp.as_raw(), &stream.out()].concat()
+            } else if txn_type == ACCESSLISTS_TX_ID || txn_type == EIP1559_TX_ID {
+                [&[txn_type], stream.as_raw()].concat()
+            } else {
+                panic!("Unsupported transaction type")
+            };
+            SignedTransaction::EthSignedTX(output)
+
         }
     }
 
@@ -146,8 +159,8 @@ mod ethsigner {
                 "25d0aFBC1Ad376136420aF0B5Aa74123359b9b77".to_lowercase()
             );
             let unsigned_tx = hex::decode("02f88c05808459682f00845996600682734594990dae794b11fa6469491251004d4f36bc497af180b8643d7403a3000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000177468697320697320746865206e6577206d657373616765000000000000000000c0").unwrap();
-            if let SignedTransaction::EthSignedTX(a) = signer.sign_transaction(unsigned_tx) {
-                assert_eq!(hex::encode(a), "02f8cf05808459682f00845996600682734594990dae794b11fa6469491251004d4f36bc497af180b8643d7403a3000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000177468697320697320746865206e6577206d657373616765000000000000000000c080a02f86f97475fc230cb981ccc31592d38eef7476379ae03bd11d9f55c3b44f4f53a00eb415de6bac8038b588538d30194d26c7d17f18d36e713bccc6feb12ffc512d");
+            if let SignedTransaction::EthSignedTX(signed) = signer.sign_transaction(unsigned_tx) {
+                assert_eq!(hex::encode(signed), "02f8cf05808459682f00845996600682734594990dae794b11fa6469491251004d4f36bc497af180b8643d7403a3000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000177468697320697320746865206e6577206d657373616765000000000000000000c080a02f86f97475fc230cb981ccc31592d38eef7476379ae03bd11d9f55c3b44f4f53a00eb415de6bac8038b588538d30194d26c7d17f18d36e713bccc6feb12ffc512d");
             }
         }
     }
