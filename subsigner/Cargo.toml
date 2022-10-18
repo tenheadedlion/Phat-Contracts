@@ -19,6 +19,7 @@ pink-extension = { path = "/home/root_/Workspace4/phala-blockchain/crates/pink/p
 pink-utils = { version = "0.1", default-features = false }
 index-traits = { path = "../crates/index-traits", default-features = false }
 paralib = { path = "../crates/paralib", default-features = false }
+hex = { version = "0.4.3", default-features = false }
 
 [dev-dependencies]
 pink-extension-runtime = "0.1.3"

@@ -60,3 +60,13 @@ Follow [this instruction](https://docs.alchemy.com/docs/hello-world-smart-contra
 cd eth
 npx hardhat run scripts/interact-with-helloworld.ts
 ```
+
+Configure your own `.env`:
+
+```config
+GOERLI_RPC_URL="https://eth-goerli.g.alchemy.com/v2/<API KEY>"
+WALLET_ADDRESS=""
+WALLET_PRIVATE_KEY=""
+API_KEY=""
+CONTRACT_ADDRESS="0x990dae794B11Fa6469491251004D4f36bc497AF1"
+```

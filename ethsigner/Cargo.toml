@@ -20,6 +20,9 @@ pink-utils = { version = "0.1", default-features = false }
 index-traits = { path = "../crates/index-traits", default-features = false }
 #pink-web3 = { git = "https://github.com/tenheadedlion/pink-web3.git", branch = "pink", version = "0.19.1", default-features = false, features = ["pink", "signing"] }
 pink-web3 = { path = "/home/root_/Workspace4/pink-web3", version = "0.19.1", default-features = false, features = ["pink", "signing"] }
+hex = { version = "0.4.3", default-features = false }
+paralib = { path = "../crates/paralib", default-features = false }
+rlp = { version = "0.5.1", default-features = false }
 
 [dev-dependencies]
 pink-extension-runtime = "0.1.3"

@@ -9,9 +9,9 @@ use index_traits::Signer as SignerTrait;
 #[pink::contract(env=PinkEnvironment)]
 mod subsigner {
     use super::*;
-    use paralib::ToArray;
-    use ink_prelude::vec::Vec;
+    use ink_prelude::{string::String, vec::Vec};
     use ink_storage::traits::{PackedLayout, SpreadAllocate, SpreadLayout};
+    use paralib::ToArray;
     use pink::chain_extension::signing;
     use pink_extension::PinkEnvironment;
     use signing::SigType;
