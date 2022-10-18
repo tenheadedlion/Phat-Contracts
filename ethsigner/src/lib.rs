@@ -50,41 +50,31 @@ mod ethsigner {
             }
         }
 
-        /// Initializes the contract
-        fn init(&mut self, rpc: String) {
-            self.rpc = rpc;
-        }
-
         /// Initializes the interior keys
         fn init_key(caller: AccountId) -> [u8; 32] {
             let salt: &[u8; 32] = caller.as_ref();
             KeyPair::derive_keypair(salt).private_key()
         }
 
-        /// Returns a transport-equipped Account
-        fn accounts(&self) -> Accounts<PinkHttp> {
-            Accounts::new(PinkHttp::new(self.rpc.clone()))
-        }
-
-        /// Imports the private key from ASCII hex string, for tests only
+        /// Imports the private key, for tests only
         ///
         /// This function will be removed in the future
         #[ink(message)]
-        pub fn import_private_key(&mut self, pk: String) {
-            self.key = hex::decode(pk).unwrap().to_array();
+        pub fn import_private_key(&mut self, pk: Vec<u8>) {
+            self.key = pk.to_array();
         }
 
-        /// Returns the public key, for tests only
-        ///
-        /// This function will be removed in the future
+        /// Returns H160-formatted address
         #[ink(message)]
-        pub fn public_key(&self) -> Vec<u8> {
-            signing::get_public_key(&self.key, SigType::Ecdsa)
+        pub fn address(&self) -> Vec<u8> {
+            let public_key = signing::get_public_key(&self.key, SigType::Ecdsa);
+            let public_key = public_key
+                .try_into()
+                .expect("Public key should be of length 33");
+            let mut address = [0u8; 20];
+            _ = ink_env::ecdsa_to_eth_address(&public_key, &mut address);
+            address.to_vec()
         }
-    }
-
-    fn parse_transaction(payload: Vec<u8>) //-> TransactionParameters
-    {
     }
 
     /// Signs the rlp-encoded unsigned_tx
@@ -130,8 +120,8 @@ mod ethsigner {
             } else {
                 panic!("Unsupported transaction type")
             };
-            SignedTransaction::EthSignedTX(output)
 
+            SignedTransaction::EthSignedTX(output)
         }
     }
 
@@ -145,15 +135,11 @@ mod ethsigner {
 
             let mut signer = EthSigner::new();
             signer.import_private_key(
-                "c7f810b1ad890950b498c3cda2b60cb5d9c65aa7d2822e6307cf75450dcbe4a4".to_string(),
+                hex::decode("c7f810b1ad890950b498c3cda2b60cb5d9c65aa7d2822e6307cf75450dcbe4a4")
+                    .unwrap(),
             );
 
-            let pubkey = signer
-                .public_key()
-                .try_into()
-                .expect("Public key should be of length 33");
-            let mut address = [0u8; 20];
-            _ = ink_env::ecdsa_to_eth_address(&pubkey, &mut address);
+            let address = signer.address();
             assert_eq!(
                 hex::encode(address),
                 "25d0aFBC1Ad376136420aF0B5Aa74123359b9b77".to_lowercase()

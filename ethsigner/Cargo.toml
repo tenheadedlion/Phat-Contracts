@@ -28,7 +28,7 @@ rlp = { version = "0.5.1", default-features = false }
 pink-extension-runtime = "0.1.3"
 
 [lib]
-name = "ethsinger"
+name = "ethsigner"
 path = "src/lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
