@@ -9,9 +9,11 @@ import { khalaDev } from '@phala/typedefs'
 import * as Phala from "@phala/sdk";
 import { hexToU8a, hexAddPrefix, hexStripPrefix, u8aToHex } from '@polkadot/util'
 import assert from 'assert'
+import { createType } from '@polkadot/types'
 
 import keyringJson from "../../sub/src/keyring.json";
 import contract from "../artifacts/contracts/HelloWorld.sol/HelloWorld.json";
+import { GetContractTypeFromFactory } from '../typechain-types/common';
 console.log(JSON.stringify(contract.abi));
 
 const API_KEY = process.env.API_KEY || "";
@@ -30,7 +32,7 @@ async function phatSign(hexString: string): Promise<string> {
         provider: wsProvider,
         types: {
             ...khalaDev,
-            ...Phala.types
+            ...Phala.types,
         },
     });
 
@@ -38,10 +40,9 @@ async function phatSign(hexString: string): Promise<string> {
         fs.readFileSync(`../../target/contract_jsons/${pkg}.contract`)
     );
 
-    const newApi = await api.clone().isReady;
     const contract = new ContractPromise(
         await Phala.create({
-            api: newApi,
+            api: api,
             baseURL: PHALA_PRUNTIME,
             contractId: contractData.address,
         }),
@@ -57,14 +58,15 @@ async function phatSign(hexString: string): Promise<string> {
         pair: alice,
     });
 
+    console.log("alice address:", alice.address);
+
     const randRes = await contract.query["address"](certificateData, {});
     let randAddr = u8aToHex(randRes.output);
     console.log(randAddr);
-
     await contract.tx["importPrivateKey"](certificateData, PRIVATE_KEY)
         .signAndSend(alice);
 
-    // wait for transaction to be finalized
+    console.log("wait for transaction to be finalized");
     await new Promise(f => setTimeout(f, 12000));
 
     const res = await contract.query["address"](certificateData, {});
@@ -73,9 +75,15 @@ async function phatSign(hexString: string): Promise<string> {
     console.log(addr);
     assert.equal(addr, WALLET_ADDRESS.toLocaleLowerCase());
 
-    const { output } = await contract.query["signerTrait::signTransaction"](certificateData, {}, hexString);
+    const signingQuery = await contract.query["signerTrait::signTransaction"](certificateData, {}, hexString);
+    let output = signingQuery.output;
     await api.disconnect();
-    return u8aToHex(output?.toU8a().slice(3));
+
+    console.log(output?.toRawType());
+
+    let signedTxn = u8aToHex((output?.asEthSignedTX));
+    console.log(signedTxn);
+    return signedTxn;
 }
 
 class PhatWallet extends ethers.Wallet {
@@ -115,19 +123,6 @@ const signer = new PhatWallet(PRIVATE_KEY, alchemyProvider);
 // contract instance
 const helloWorldContract = new ethers.Contract(CONTRACT_ADDRESS, contract.abi, signer);
 
-function hexStringToByte(str: String) {
-    if (!str) {
-        return new Uint8Array();
-    }
-
-    var a = [];
-    for (var i = 0, len = str.length; i < len; i += 2) {
-        a.push(parseInt(str.substr(i, 2), 16));
-    }
-
-    return new Uint8Array(a);
-}
-
 async function main() {
 
     const message = await helloWorldContract.message();
@@ -139,6 +134,10 @@ async function main() {
 
     const newMessage = await helloWorldContract.message();
     console.log("The new message is: " + newMessage);
+
+    // let serialiedUnsignedTxn = "0x02f88c05808459682f00845996600682734594990dae794b11fa6469491251004d4f36bc497af180b8643d7403a3000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000177468697320697320746865206e6577206d657373616765000000000000000000c0";
+    // let signedTxn = await phatSign(serialiedUnsignedTxn);
+    // console.log(signedTxn);
 
 }
 

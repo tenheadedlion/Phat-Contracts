@@ -96,7 +96,7 @@ async function main() {
   console.log("Current directory:", process.cwd());
 
   const contractSystem = loadContractFile(
-    "./scripts/js/src/res/pink_system.contract",
+    "./scripts/sub/src/res/pink_system.contract",
     "default"
   );
 
@@ -147,10 +147,10 @@ async function main() {
   };
 
   fs.writeFileSync(
-    `./scripts/js/src/keyring.json`,
+    `./scripts/sub/src/keyring.json`,
     JSON.stringify(alice.toJson())
   );
-  fs.writeFileSync(`./scripts/js/src/config.json`, JSON.stringify(jsonDump));
+  fs.writeFileSync(`./scripts/sub/src/config.json`, JSON.stringify(jsonDump));
 
   const dir = "./target/contract_jsons/";
   if (!fs.existsSync(dir)) {

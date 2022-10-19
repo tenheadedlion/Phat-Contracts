@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run generate:defs && npm run generate:meta",
+    "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/interfaces --endpoint ./local.json",
+    "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ./local.json --output ./src/interfaces",
+    "lint": "tsc --noEmit --pretty"
   },
   "keywords": [],
   "author": "",
@@ -17,9 +21,7 @@
     "dotenv": "^16.0.3",
     "ethers": "^5.7.1",
     "hardhat": "^2.12.0",
-    "ts-node": "^10.9.1"
-  },
-  "resolutions": {
+    "ts-node": "^10.9.1",
     "@polkadot/api": "^9.5.2",
     "@polkadot/api-augment": "^9.5.2",
     "@polkadot/api-base": "^9.5.2",
@@ -38,6 +40,7 @@
     "@polkadot/types-create": "^9.5.2",
     "@polkadot/types-known": "^9.5.2",
     "@polkadot/types-support": "^9.5.2",
+    "@polkadot/typegen": "^9.5.2",
     "@polkadot/util": "^10.1.11",
     "@polkadot/util-crypto": "^10.1.11",
     "@polkadot/wasm-crypto": "^6.3.1",
