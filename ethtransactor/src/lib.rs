@@ -222,12 +222,6 @@ mod evm_transator {
 
             transactor.add_account(secret_bytes);
 
-            // feel free to send me some tokens
-            assert_eq!(
-                transactor.wallet(),
-                hex!("25d0aFBC1Ad376136420aF0B5Aa74123359b9b77").into()
-            );
-
             // Call transactor
             transactor.update("hello".to_string()).unwrap();
             dbg!(transactor.message().unwrap());

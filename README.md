@@ -70,3 +70,17 @@ WALLET_PRIVATE_KEY=""
 API_KEY=""
 CONTRACT_ADDRESS="0x990dae794B11Fa6469491251004D4f36bc497AF1"
 ```
+
+## The PHAT Token
+
+Take a walk through this: https://hardhat.org/tutorial
+
+```shell
+$ npx hardhat run scripts/deploy-hardhat.ts --network goerli
+Token address: 0x455f633a104eA0ED155576aDb3b484b0BC3e6c3F
+```
+
+Max Total Supply: 100 PHAT
+
+
+
