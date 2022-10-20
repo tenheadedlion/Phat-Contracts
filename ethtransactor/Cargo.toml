@@ -1,5 +1,5 @@
 [package]
-name = "ethtx"
+name = "ethtransactor"
 version = "0.1.2"
 authors = ["anonymous"]
 edition = "2021"
@@ -34,7 +34,7 @@ dotenv = "0.15.0"
 hex = "0.4.3"
 
 [lib]
-name = "ethtx"
+name = "ethtransactor"
 path = "src/lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
