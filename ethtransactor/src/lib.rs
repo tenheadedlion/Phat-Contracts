@@ -9,7 +9,7 @@ mod evm_transator {
     use alloc::{string::String, string::ToString, vec::Vec};
     use ink_storage::traits::{PackedLayout, SpreadLayout};
     use paralib::ToArray;
-    use pink_web3::ethabi::Bytes;
+    use pink_web3::ethabi::{Bytes, Uint};
     use pink_web3::keys::pink::KeyPair;
     use pink_web3::signing::Key;
     use scale::{Decode, Encode};
@@ -108,29 +108,34 @@ mod evm_transator {
 
         /// Sends message to the target EVM contract
         #[ink(message)]
-        pub fn test(&self) -> Result<()> {
-            use hex_literal::hex;
-            use pink_web3::ethabi::Token;
-
-            let chain_id: u8 = 1;
-            let data: Bytes = hex!("000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000056bc75e2d631000000000000000000000000000000000000000000000000000000000000000000024000101008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a4800000000000000000000000000000000000000000000000000000000").into();
-            let token_rid: H256 =
-                hex!("00e6dfb61a2fb903df487c401663825643bb825d41695e63df8af6162ab145a6").into();
-
+        pub fn deposit(
+            &self,
+            token_rid: H256,
+            amount: Uint,
+            recipient_address: Vec<u8>,
+        ) -> Result<H256> {
             let Config { rpc, evm_contract } =
                 self.config.as_ref().ok_or(Error::NotConfigurated)?;
 
             let contract = EvmContractClient::connect(rpc, evm_contract.clone().into())?;
 
-            _ = contract.deposit(self.key.into(), chain_id, token_rid, data)?;
+            let chain_id = 1;
 
-            Ok(())
+            let tx = contract.deposit(
+                self.key.into(),
+                chain_id,
+                token_rid,
+                amount,
+                recipient_address,
+            )?;
+            Ok(tx)
         }
     }
 
     use pink_web3::api::{Eth, Namespace};
     use pink_web3::contract::tokens::Tokenize;
     use pink_web3::contract::{Contract, Options};
+    use pink_web3::ethabi::Token;
     use pink_web3::transports::{resolve_ready, PinkHttp};
     use pink_web3::types::{Res, H160, H256};
 
@@ -181,8 +186,10 @@ mod evm_transator {
             signer: KeyPair,
             dest_chain_id: u8,
             token_rid: H256,
-            data: Bytes,
+            amount: Uint,
+            recipient_address: Bytes,
         ) -> Result<H256> {
+            let data = Self::compose_deposite_data(amount, recipient_address);
             let params = (dest_chain_id, token_rid, data);
             // Estiamte gas before submission
             let gas = resolve_ready(self.contract.estimate_gas(
@@ -199,13 +206,57 @@ mod evm_transator {
             let tx_id = resolve_ready(self.contract.signed_call(
                 "deposit",
                 params,
-                Options::with(|opt| {
-                    opt.gas = Some(gas)
-                }),
+                Options::with(|opt| opt.gas = Some(gas)),
                 signer,
             ))
             .expect("FIXME: submit failed");
             Ok(tx_id)
+        }
+
+        /// Composes the `data` argument to the chainbridge `deposit` function
+        ///
+        ///
+        /// The signature of the solidity `deposit` function is as follows:
+        ///
+        /// ```
+        /// function deposit(uint8 destinationChainID,
+        ///     bytes32 resourceID,
+        ///     bytes calldata data)
+        /// external payable whenNotPaused;
+        /// ```
+        ///  
+        /// `Data` passed into the function should be constructed as follows:
+        /// * `amount`                      uint256     bytes   0 - 32
+        /// * `recipientAddress length`     uint256     bytes  32 - 64
+        /// * `recipientAddress`            bytes       bytes  64 - END
+        fn compose_deposite_data(amount: Uint, recipient_address: Bytes) -> Bytes {
+            let ra_len = recipient_address.len();
+            [
+                amount.to_be_fixed_bytes(),
+                ra_len.to_be_fixed_bytes(),
+                recipient_address,
+            ]
+            .concat()
+        }
+    }
+
+    trait ToBeBytes {
+        fn to_be_fixed_bytes(&self) -> Bytes;
+    }
+
+    impl ToBeBytes for Uint {
+        fn to_be_fixed_bytes(&self) -> Bytes {
+            let mut a: [u8; 32] = [0; 32];
+            self.to_big_endian(&mut a);
+            a.into()
+        }
+    }
+
+    /// FIXME: can be lossy
+    impl ToBeBytes for usize {
+        fn to_be_fixed_bytes(&self) -> Bytes {
+            let uint = Uint::from(*self as u32);
+            uint.to_be_fixed_bytes()
         }
     }
 
@@ -238,7 +289,8 @@ mod evm_transator {
                 .instantiate()
                 .expect("failed to deploy EvmTransactor");
 
-            let rpc = "https://eth-goerli.g.alchemy.com/v2/ZW4OBtfvnKAYOEPWHOLS8s5aE9c3ddeq".to_string();
+            let rpc =
+                "https://eth-goerli.g.alchemy.com/v2/ZW4OBtfvnKAYOEPWHOLS8s5aE9c3ddeq".to_string();
             let bridge_contract_addr: H160 =
                 hex!("056c0e37d026f9639313c281250ca932c9dbe921").into();
 
@@ -255,7 +307,17 @@ mod evm_transator {
                 hex!("25d0aFBC1Ad376136420aF0B5Aa74123359b9b77").into()
             );
 
-            _ = transactor.test();
+            let token_rid: H256 =
+                hex!("00e6dfb61a2fb903df487c401663825643bb825d41695e63df8af6162ab145a6").into();
+            // 1 PHA
+            let amount = Uint::from(1_000_000_000_000_000_000_u128);
+            let recipient_address: Bytes =
+                hex!("000101008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48")
+                    .into();
+            let tx_id = transactor
+                .deposit(token_rid, amount, recipient_address)
+                .unwrap();
+            dbg!(tx_id);
         }
     }
 }
