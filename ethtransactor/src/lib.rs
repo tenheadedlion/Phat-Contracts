@@ -9,6 +9,8 @@ mod evm_transator {
     use alloc::{string::String, string::ToString, vec::Vec};
     use ink_storage::traits::{PackedLayout, SpreadLayout};
     use paralib::ToArray;
+    use pink_web3::ethabi::Bytes;
+    use pink_web3::keys::pink::KeyPair;
     use pink_web3::signing::Key;
     use scale::{Decode, Encode};
 
@@ -66,9 +68,9 @@ mod evm_transator {
             Ok(())
         }
 
-        /// Adds an account from a private key, for tests only
+        /// Import a private key to override the interior account
         #[ink(message)]
-        pub fn add_account(&mut self, private_key: Vec<u8>) -> H160 {
+        pub fn set_account(&mut self, private_key: Vec<u8>) -> H160 {
             self.key = private_key.to_array();
             self.wallet()
         }
@@ -93,7 +95,6 @@ mod evm_transator {
         fn key_pair() -> pink_web3::keys::pink::KeyPair {
             pink_web3::keys::pink::KeyPair::derive_keypair(b"rollup-transactor")
         }
-
         /// Polls message from the target EVM contract
         #[ink(message)]
         pub fn message(&self) -> Result<String> {
@@ -102,32 +103,36 @@ mod evm_transator {
 
             let contract = EvmContractClient::connect(rpc, evm_contract.clone().into())?;
 
-            let pair: KeyPair = self.key.into();
             contract.message()
         }
 
         /// Sends message to the target EVM contract
         #[ink(message)]
-        pub fn update(&self, message: String) -> Result<()> {
+        pub fn test(&self) -> Result<()> {
+            use hex_literal::hex;
+            use pink_web3::ethabi::Token;
+
+            let chain_id: u8 = 1;
+            let data: Bytes = hex!("000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000056bc75e2d631000000000000000000000000000000000000000000000000000000000000000000024000101008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a4800000000000000000000000000000000000000000000000000000000").into();
+            let token_rid: H256 =
+                hex!("00e6dfb61a2fb903df487c401663825643bb825d41695e63df8af6162ab145a6").into();
+
             let Config { rpc, evm_contract } =
                 self.config.as_ref().ok_or(Error::NotConfigurated)?;
 
             let contract = EvmContractClient::connect(rpc, evm_contract.clone().into())?;
 
-            let pair: KeyPair = self.key.into();
-            _ = contract.update(pair, message)?;
+            _ = contract.deposit(self.key.into(), chain_id, token_rid, data)?;
 
             Ok(())
         }
     }
 
+    use pink_web3::api::{Eth, Namespace};
+    use pink_web3::contract::tokens::Tokenize;
     use pink_web3::contract::{Contract, Options};
     use pink_web3::transports::{resolve_ready, PinkHttp};
-    use pink_web3::types::{Res, H160};
-    use pink_web3::{
-        api::{Eth, Namespace},
-        keys::pink::KeyPair,
-    };
+    use pink_web3::types::{Res, H160, H256};
 
     /// The client to submit transaction to the Evm evm_contract contract
     struct EvmContractClient {
@@ -146,23 +151,44 @@ mod evm_transator {
 
         /// Calls the EVM contract function `message`
         fn message(&self) -> Result<String> {
-            let a: String =
-                resolve_ready(
-                    self.contract
-                        .query("message", (), None, Options::default(), None),
-                )
-                .expect("FIXME: query failed");
+            let a: String = resolve_ready(self.contract.query(
+                "_resourceIDToHandlerAddress",
+                (),
+                None,
+                Options::default(),
+                None,
+            ))
+            .expect("FIXME: query failed");
             Ok(a)
         }
 
-        // Calls the EVM contract function `update`,
-        // returns the transaction id if it succeed
-        fn update(&self, pair: KeyPair, message: String) -> Result<primitive_types::H256> {
+        /// Calls the EVM contract function `update`,
+        /// returns the transaction id if it succeed
+        ///
+        /// # Arguments
+        ///
+        /// * `dest_chain_id` - ID of chain deposit originated from.
+        /// * `token_rid` - resource id used to find address of token handler to be used for deposit
+        /// * `data` - Addition data to be passed to special handler
+        ///
+        /// # Examples
+        ///
+        /// ```
+        ///
+        /// ```
+        fn deposit(
+            &self,
+            signer: KeyPair,
+            dest_chain_id: u8,
+            token_rid: H256,
+            data: Bytes,
+        ) -> Result<H256> {
+            let params = (dest_chain_id, token_rid, data);
             // Estiamte gas before submission
             let gas = resolve_ready(self.contract.estimate_gas(
-                "update",
-                message.clone(),
-                pair.address(),
+                "deposit",
+                params.clone(),
+                signer.address(),
                 Options::default(),
             ))
             .expect("FIXME: failed to estiamte gas");
@@ -171,10 +197,12 @@ mod evm_transator {
 
             // Actually submit the tx (no guarantee for success)
             let tx_id = resolve_ready(self.contract.signed_call(
-                "update",
-                message,
-                Options::with(|opt| opt.gas = Some(gas)),
-                pair,
+                "deposit",
+                params,
+                Options::with(|opt| {
+                    opt.gas = Some(gas)
+                }),
+                signer,
             ))
             .expect("FIXME: submit failed");
             Ok(tx_id)
@@ -186,7 +214,6 @@ mod evm_transator {
         use super::*;
         use dotenv::dotenv;
         use hex_literal::hex;
-        use ink::ToAccountId;
         use ink_lang as ink;
 
         #[ink::test]
@@ -203,7 +230,7 @@ mod evm_transator {
             let hash1 = ink_env::Hash::try_from([10u8; 32]).unwrap();
             ink_env::test::register_contract::<EvmTransactor>(hash1.as_ref());
 
-            // Deploy Transactor
+            // Deploy Transactor(phat contract)
             let mut transactor = EvmTransactorRef::default()
                 .code_hash(hash1)
                 .endowment(0)
@@ -211,20 +238,24 @@ mod evm_transator {
                 .instantiate()
                 .expect("failed to deploy EvmTransactor");
 
-            let rpc =
-                "https://eth-goerli.g.alchemy.com/v2/ZW4OBtfvnKAYOEPWHOLS8s5aE9c3ddeq".to_string();
-            let evm_contract: H160 = hex!("990dae794B11Fa6469491251004D4f36bc497AF1").into();
-            dbg!(&evm_contract);
+            let rpc = "https://eth-goerli.g.alchemy.com/v2/ZW4OBtfvnKAYOEPWHOLS8s5aE9c3ddeq".to_string();
+            let bridge_contract_addr: H160 =
+                hex!("056c0e37d026f9639313c281250ca932c9dbe921").into();
+
+            dbg!(&bridge_contract_addr);
             dbg!(&rpc);
-            transactor.config(rpc, evm_contract).unwrap();
+            transactor.config(rpc, bridge_contract_addr).unwrap();
             let secret_key = env::vars().find(|x| x.0 == "SECRET_KEY").unwrap().1;
             let secret_bytes = hex::decode(secret_key).unwrap();
 
-            transactor.add_account(secret_bytes);
+            transactor.set_account(secret_bytes);
 
-            // Call transactor
-            transactor.update("hello".to_string()).unwrap();
-            dbg!(transactor.message().unwrap());
+            assert_eq!(
+                transactor.wallet(),
+                hex!("25d0aFBC1Ad376136420aF0B5Aa74123359b9b77").into()
+            );
+
+            _ = transactor.test();
         }
     }
 }
