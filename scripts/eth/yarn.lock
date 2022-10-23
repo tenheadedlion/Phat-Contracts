@@ -3589,6 +3589,13 @@
   "resolved" "https://registry.npmjs.org/@types/tough-cookie/-/tough-cookie-4.0.2.tgz"
   "version" "4.0.2"
 
+"@types/typescript@^2.0.0":
+  "integrity" "sha512-WMEWfMISiJ2QKyk5/dSdgL0ZwP//PZj0jmDU0hMh51FmLq4WIYzjlngsUQZXejQL+QtkXJUOGjb3G3UCvgZuSQ=="
+  "resolved" "https://registry.npmjs.org/@types/typescript/-/typescript-2.0.0.tgz"
+  "version" "2.0.0"
+  dependencies:
+    "typescript" "*"
+
 "@types/w3c-web-usb@1.0.6":
   "integrity" "sha512-cSjhgrr8g4KbPnnijAr/KJDNKa/bBa+ixYkywFRvrhvi9n1WEl7yYbtRyzE6jqNQiSxxJxoAW3STaOQwJHndaw=="
   "resolved" "https://registry.npmjs.org/@types/w3c-web-usb/-/w3c-web-usb-1.0.6.tgz"
