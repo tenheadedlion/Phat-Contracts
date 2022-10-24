@@ -7,7 +7,9 @@ members = [
     "subsigner",
     "ethsigner",
     "ethtransactor",
-    "ethtransactor-helloworld"
+    "subtransactor",
+    "ethtransactor-helloworld",
+    "subxt-scripts"
 ]
 
 exclude = [
