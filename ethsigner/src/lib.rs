@@ -75,6 +75,14 @@ mod ethsigner {
             _ = ink_env::ecdsa_to_eth_address(&public_key, &mut address);
             address.to_vec()
         }
+
+        /// Returns the substrate-style address
+        ///
+        /// Don't include this function
+        #[ink(message)]
+        pub fn native_address(&self) -> AccountId {
+            Self::env().caller()
+        }
     }
 
     /// Signs the rlp-encoded unsigned_tx
@@ -144,6 +152,7 @@ mod ethsigner {
                 hex::encode(address),
                 "25d0aFBC1Ad376136420aF0B5Aa74123359b9b77".to_lowercase()
             );
+            dbg!(signer.native_address());
             let unsigned_tx = hex::decode("02f88c05808459682f00845996600682734594990dae794b11fa6469491251004d4f36bc497af180b8643d7403a3000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000177468697320697320746865206e6577206d657373616765000000000000000000c0").unwrap();
             if let SignedTransaction::EthSignedTX(signed) = signer.sign_transaction(unsigned_tx) {
                 assert_eq!(hex::encode(signed), "02f8cf05808459682f00845996600682734594990dae794b11fa6469491251004d4f36bc497af180b8643d7403a3000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000177468697320697320746865206e6577206d657373616765000000000000000000c080a02f86f97475fc230cb981ccc31592d38eef7476379ae03bd11d9f55c3b44f4f53a00eb415de6bac8038b588538d30194d26c7d17f18d36e713bccc6feb12ffc512d");

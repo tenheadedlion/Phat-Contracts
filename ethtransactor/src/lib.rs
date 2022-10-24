@@ -317,6 +317,7 @@ mod evm_transator {
             let tx_id = transactor
                 .deposit(token_rid, amount, recipient_address)
                 .unwrap();
+            // https://goerli.etherscan.io/tx/0xc064af26458ca91b86af128ba86d9cdcee51397cebebc714df8fc182b298ab11
             dbg!(tx_id);
         }
     }
