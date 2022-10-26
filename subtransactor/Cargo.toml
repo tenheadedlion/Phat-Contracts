@@ -28,9 +28,16 @@ paralib = { path = "../crates/paralib", default-features = false }
 hex-literal = "0.3"
 hex = "0.4.3"
 
-[dev-dependencies]
-pink-extension-runtime = "0.1.3"
+serde_json = { version = "1.0.0", default-features = false }
+serde = { version = "1.0.0", default-features = false }
 
+sp_runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", package = "sp-runtime" }
+sp_core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", package = "sp-core" }
+sp_keyring = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30", package = "sp-keyring" }
+sp_version = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30", package = "sp-version" }
+
+[dev-dependencies]
+pink-extension-runtime = "0.1.5"
 dotenv = "0.15.0"
 
 

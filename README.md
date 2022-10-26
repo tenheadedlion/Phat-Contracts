@@ -93,7 +93,7 @@ To use the library, a copy of metadata for the target runtime is required, the m
 subxt metadata --url wss://khala.api.onfinality.io:443/public-ws -f bytes > metadata.scale
 ```
 
-put your secret key in the `.env` file in the root of the project
+Put your secret key in the `.env` file in the root of the project
 
 ```
 SECRET_KEY=SDFSFAFSDF...
