@@ -290,7 +290,7 @@ mod evm_transator {
                 .expect("failed to deploy EvmTransactor");
 
             let rpc =
-                "https://eth-goerli.g.alchemy.com/v2/ZW4OBtfvnKAYOEPWHOLS8s5aE9c3ddeq".to_string();
+                "https://eth-goerli.g.alchemy.com/v2/lLqSMX_1unN9Xrdy_BB9LLZRgbrXwZv2".to_string();
             let bridge_contract_addr: H160 =
                 hex!("056c0e37d026f9639313c281250ca932c9dbe921").into();
 
