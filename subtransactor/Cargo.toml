@@ -21,20 +21,19 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 
 
 pink-extension = { version = "0.1.17", default-features = false }
-pink-utils = { version = "0.1", default-features = false }
 pink-web3 = { git = "https://github.com/Phala-Network/pink-web3.git", branch = "pink", default-features = false, features = ["pink", "signing"]}
 primitive-types = { version = "0.11", default-features = false, features = ["codec", "scale-info"] }
 paralib = { path = "../crates/paralib", default-features = false }
 hex-literal = "0.3"
-hex = "0.4.3"
+hex = { version = "0.4.3", default-features = false }
+json = { version = "0.4.0", package = "pink-json", default-features = false }
 
-serde_json = { version = "1.0.0", default-features = false }
-serde = { version = "1.0.0", default-features = false }
-
-sp_runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", package = "sp-runtime" }
-sp_core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", package = "sp-core" }
-sp_keyring = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30", package = "sp-keyring" }
-sp_version = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30", package = "sp-version" }
+#serde_json = { version = "1.0.0", default-features = false }
+#serde = { version = "1.0.0", default-features = false }
+#sp_runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", package = "sp-runtime" }
+#sp_core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", package = "sp-core" }
+#sp_keyring = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30", package = "sp-keyring" }
+#sp_version = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30", package = "sp-version" }
 
 [dev-dependencies]
 pink-extension-runtime = "0.1.5"
@@ -60,5 +59,7 @@ std = [
     "scale-info/std",
     "pink-extension/std",
     "pink-web3/std",
+    "hex/std",
+    "json/std"
 ]
 ink-as-dependency = []
